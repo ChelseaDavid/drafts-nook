@@ -89,6 +89,7 @@ class comment {
 			$exceptionType = get_class($exception);
 			throw (new $exceptionType($exception->getMessage(), 0, $exception));
 		}
+		// convert and store the comment id
 		$this->commentId = $uuid;
 	}
 
@@ -117,6 +118,7 @@ class comment {
 			$exceptionType = get_class($exception);
 			throw (new $exceptionType($exception->getMessage(), 0, $exception));
 		}
+		// convert and store the event id
 		$this->commentEventId = $uuid;
 	}
 
@@ -144,6 +146,7 @@ class comment {
 			$exceptionType = get_class($exception);
 			throw(new $exceptionType($exception->getMessage(), 0, $exception));
 		}
+		//convert and store the profile id
 		$this->commentProfileId = $uuid;
 	}
 
@@ -167,14 +170,17 @@ class comment {
 	 */
 
 	public function setCommentContent(string $newCommentContent) : void {
+		// verify the comment content is secure
 		$newCommentContent = trim($newCommentContent);
 		$newCommentContent = filter_var($newCommentContent, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
 		if(empty($newCommentContent) === true) {
 			throw(new\InvalidArgumentException("Comment is empty or insecure"));
 		}
+		//verify the comment content will fir in the database
 		if(strlen($newCommentContent) > 500) {
 			throw(new \RangeException("Comment must not exceed 500 characters"));
 		}
+		// store the comment content
 		$this->commentContent = $newCommentContent;
 	}
 
@@ -187,4 +193,109 @@ class comment {
 	public function getCommentDateTime(): DateTime {
 		return $this->commentDateTime;
 	}
+
+	/*
+	 * mutator method for commentDateTime
+
+	@param \DateTime|string|null $newCommentDateTime comment date as a DateTime object or a string (or null to load the current time)
+	@throws \InvalidArgumentException if $newCommentDateTime is not a valid object or string
+	@throws \RangeException if $newCommentDateTime is a date that does not exist.
+	 */
+	public function setCommentDateTime($newCommentDateTime = null) : void {
+		// base case: if the date is null, use the current date and time
+		if($newCommentDateTime === null) {
+			$this->commentDateTime = new \DateTime();
+			return;
+			//store the date using the validateDate
+		} try {
+			$newCommentDateTime = self::validateDateTime($newCommentDateTime);
+		} catch(\InvalidArgumentException | \RangeException $exception) {
+			$exceptionType = get_class($exception);
+			throw (new $exceptionType($exception->getMessage(), 0, $exception));
+		}
+		$this->commentDateTime=$newCommentDateTime;
+	}
+
+	/*
+	 * inserts this comment into mySQL
+	 *
+	 * @param \PDO $pdo PDO connection object
+	 * @throws \PDO exception when mySQL related errors occur
+	 * @throws \TypeError if $pdo in not a PDO connection object
+	 */
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
