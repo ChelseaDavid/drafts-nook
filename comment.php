@@ -52,13 +52,13 @@ class comment {
 	 */
 
 	public function __construct(string $newCommentId, string $newCommentEventId, string $newCommentProfileId, string $newCommentContent, string $newCommentDateTime) {
-		try{
+		try {
 			$this->setCommentId($newCommentId);
 			$this->setCommentEventId($newCommentEventId);
 			$this->setCommentProfileId($newCommentProfileId);
 			$this->setCommentContent($newCommentContent);
 			$this->setCommentDateTime($newCommentDateTime);
-		} catch(\InvalidArgumentException | \RangeException | \Exception | \TypeError $exception){
+		} catch(\InvalidArgumentException | \RangeException | \Exception | \TypeError $exception) {
 			$exceptionType = get_class($exception);
 			throw (new $exceptionType($exception->getMessage(), 0, $exception));
 		}
@@ -70,8 +70,8 @@ class comment {
 	 * @return Uuid value of commentId
 	 *
 	 */
-	public function getCommentId() : Uuid {
-		return($this->commentId);
+	public function getCommentId(): Uuid {
+		return ($this->commentId);
 	}
 
 	/*
@@ -82,10 +82,10 @@ class comment {
 	 * @throws \TypeError if $newCommentId is not a uuid
 	 */
 
-	public function setCommentId($newCommentId) : void {
+	public function setCommentId($newCommentId): void {
 		try {
-			$uuid = self :: validateUuid($newCommentId);
-		}catch(\InvalidArgumentException | \RangeException | \Exception | \TypeError $exception){
+			$uuid = self:: validateUuid($newCommentId);
+		} catch(\InvalidArgumentException | \RangeException | \Exception | \TypeError $exception) {
 			$exceptionType = get_class($exception);
 			throw (new $exceptionType($exception->getMessage(), 0, $exception));
 		}
@@ -99,9 +99,9 @@ class comment {
 		@return Uuid value of the commentEventId
 	 *
 	 */
-	public function getCommentEventId() : Uuid {
-		return($this->commentEventId);
-		}
+	public function getCommentEventId(): Uuid {
+		return ($this->commentEventId);
+	}
 
 	/*
 	 * mutator method for commentEventId
@@ -111,7 +111,7 @@ class comment {
 	 * @throws \TypeError if $newCommentEventId is not a Uuid
 	 */
 
-	public function setCommentEventId($newCommentEventId) : void {
+	public function setCommentEventId($newCommentEventId): void {
 		try {
 			$uuid = self::ValidateUuid($newCommentEventId);
 		} catch(\InvalidArgumentException | \Exception | \TypeError $exception) {
@@ -127,8 +127,8 @@ class comment {
 	 *
 	 * @return Uuid value of the commentProfileId
 	 */
-	public function getCommentProfileId() : Uuid {
-		return($this->commentProfileId);
+	public function getCommentProfileId(): Uuid {
+		return ($this->commentProfileId);
 	}
 
 	/*
@@ -139,10 +139,10 @@ class comment {
 	 * @throws \TypeError if $newCommentProfileId is not a Uuid
 	 */
 
-	public function setCommentProfileId($newCommentProfileId) : void {
+	public function setCommentProfileId($newCommentProfileId): void {
 		try {
-			$uuid = self ::ValidateUuid($newCommentProfileId);
-		}catch(\InvalidArgumentException | \Exception | \TypeError $exception) {
+			$uuid = self::ValidateUuid($newCommentProfileId);
+		} catch(\InvalidArgumentException | \Exception | \TypeError $exception) {
 			$exceptionType = get_class($exception);
 			throw(new $exceptionType($exception->getMessage(), 0, $exception));
 		}
@@ -156,8 +156,8 @@ class comment {
 	 * @return string value of the commentContent
 	 */
 
-	public function getCommentContent() : string {
-		return($this->commentContent);
+	public function getCommentContent(): string {
+		return ($this->commentContent);
 	}
 
 	/*
@@ -169,7 +169,7 @@ class comment {
 	 * @throws \TypeError is $newCommentContent is not a string
 	 */
 
-	public function setCommentContent(string $newCommentContent) : void {
+	public function setCommentContent(string $newCommentContent): void {
 		// verify the comment content is secure
 		$newCommentContent = trim($newCommentContent);
 		$newCommentContent = filter_var($newCommentContent, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
@@ -201,20 +201,22 @@ class comment {
 	@throws \InvalidArgumentException if $newCommentDateTime is not a valid object or string
 	@throws \RangeException if $newCommentDateTime is a date that does not exist.
 	 */
-	public function setCommentDateTime($newCommentDateTime = null) : void {
+	public function setCommentDateTime($newCommentDateTime = null): void {
 		// base case: if the date is null, use the current date and time
 		if($newCommentDateTime === null) {
 			$this->commentDateTime = new \DateTime();
 			return;
 			//store the date using the validateDate
-		} try {
+		}
+		try {
 			$newCommentDateTime = self::validateDateTime($newCommentDateTime);
 		} catch(\InvalidArgumentException | \RangeException $exception) {
 			$exceptionType = get_class($exception);
 			throw (new $exceptionType($exception->getMessage(), 0, $exception));
 		}
-		$this->commentDateTime=$newCommentDateTime;
+		$this->commentDateTime = $newCommentDateTime;
 	}
+}
 
 	/*
 	 * inserts this comment into mySQL
@@ -222,7 +224,47 @@ class comment {
 	 * @param \PDO $pdo PDO connection object
 	 * @throws \PDO exception when mySQL related errors occur
 	 * @throws \TypeError if $pdo in not a PDO connection object
+	*/
+	public function insert(\PDO $pdo) : void {
+
+		//create query template
+		$query = "INSERT INTO comment(commentId,commentEventId,commentProfileId,commentContent,commentDateTime) 
+					VALUES (:commentId, :commentEventId, :commentProfileId, :commentContent, :commentDateTime)";
+		$statement = $pdo->prepare($query);
+
+		// bind the member variables to the place holders in the template
+		$formattedDate = $this->commentDateTime->format("Y-m-d H:i:s.u");
+		$parameters = ["commentId" => $this->commentId->getBytes(), "commentEventId"=> $this->commentEventId->getBytes(), "commentProfileId"=> $this->commentProfileId->getBytes(), "commentContent"=>$this->commentContent, "commentDateTime"=>$formattedDate];
+		$statement->execute($parameters);
+	}
+
+	/**
+	deletes the comment from mySQL
+
+	@param \PDO $pdo PDO connection object
+	@throws \PDOException when mySQL related errors occur
+	@throws \TypeError if $pdo is not a PDO connection object
+	*/
+	public function delete(\PDO $pdo) : void {
+		//create query template
+		$query = "DELETE FROM comment WHERE commentId = :commentId";
+		$statement = $pdo->prepare($query);
+
+		// bind the member variables to the place holder in the template
+		$parameters = ["commentId" =>$this->commentId->getBytes()];
+		$statement->execute($parameters);
+	}
+
+	/*
+	 * updates this comment in mySQL
+	 *
+	 * @param \PDO $pdo PDO connection object
+	 * @throws \PDOException when mySql related errors occur
+	 * @throws \TypeError if $pdo is not a PDO connection object
 	 */
+	public function update(\PDO $pdo) : void {
+		//create query template
+	$query = "UPDATE comment SET commentProfileId = :commentProfileId, commentContent = :commentContent, "
 }
 
 
